@@ -1,0 +1,67 @@
+scenario,technology,carrier,value
+TECH-unlimited,Hydro,electricity,39.454518
+TECH-unlimited,Wind,electricity,17.20022253
+TECH-unlimited,Biomass CHP,electricity,7.993424908
+TECH-unlimited,PV,electricity,14.93309963
+TECH-unlimited,Net imports,electricity,59.45104953
+TECH-limited,Hydro,electricity,40.16446806
+TECH-limited,Wind,electricity,29.50030279
+TECH-limited,Biomass CHP,electricity,7.99339605
+TECH-limited,PV,electricity,87.43919138
+TECH-limited,Net imports,electricity,26.29051421
+LED-unlimited,Hydro,electricity,39.56151966
+LED-unlimited,Wind,electricity,17.20053868
+LED-unlimited,Biomass CHP,electricity,6.155346092
+LED-unlimited,PV,electricity,7.21918398
+LED-unlimited,Net imports,electricity,45.56112658
+LED-limited,Hydro,electricity,39.67116712
+LED-limited,Wind,electricity,29.50000477
+LED-limited,Biomass CHP,electricity,6.158685976
+LED-limited,PV,electricity,34.38993481
+LED-limited,Net imports,electricity,16.34198254
+TECH-autarky,Hydro,electricity,41.04255252
+TECH-autarky,Wind,electricity,29.50000074
+TECH-autarky,Biomass CHP,electricity,7.996408593
+TECH-autarky,PV,electricity,155.1437525
+TECH-autarky,Net imports,electricity,-10.98877334
+LED-autarky,Hydro,electricity,40.53462449
+LED-autarky,Wind,electricity,29.50008026
+LED-autarky,Biomass CHP,electricity,6.154880379
+LED-autarky,PV,electricity,86.95208775
+LED-autarky,Net imports,electricity,-6.876389917
+TECH-unlimited,Biomass boiler,heat,41
+TECH-unlimited,Biomethane boiler,heat,30
+TECH-unlimited,District heating biomass,heat,6
+TECH-unlimited,District heating geothermal,heat,87
+TECH-unlimited,Heat pump,heat,-7
+TECH-unlimited,Solar thermal,heat,0
+LED-unlimited,Biomass boiler,heat,11
+LED-unlimited,Biomethane boiler,heat,0
+LED-unlimited,District heating biomass,heat,13
+LED-unlimited,District heating geothermal,heat,5
+LED-unlimited,Heat pump,heat,22
+LED-unlimited,Solar thermal,heat,4
+TECH-limited,Biomass boiler,heat,41
+TECH-limited,Biomethane boiler,heat,30
+TECH-limited,District heating biomass,heat,6
+TECH-limited,District heating geothermal,heat,87
+TECH-limited,Heat pump,heat,-7
+TECH-limited,Solar thermal,heat,0
+LED-limited,Biomass boiler,heat,11
+LED-limited,Biomethane boiler,heat,0
+LED-limited,District heating biomass,heat,13
+LED-limited,District heating geothermal,heat,5
+LED-limited,Heat pump,heat,22
+LED-limited,Solar thermal,heat,4
+TECH-autarky,Biomass boiler,heat,41
+TECH-autarky,Biomethane boiler,heat,30
+TECH-autarky,District heating biomass,heat,6
+TECH-autarky,District heating geothermal,heat,87
+TECH-autarky,Heat pump,heat,-7
+TECH-autarky,Solar thermal,heat,0
+LED-autarky,Biomass boiler,heat,11
+LED-autarky,Biomethane boiler,heat,0
+LED-autarky,District heating biomass,heat,13
+LED-autarky,District heating geothermal,heat,5
+LED-autarky,Heat pump,heat,22
+LED-autarky,Solar thermal,heat,4

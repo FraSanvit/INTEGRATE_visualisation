@@ -1,0 +1,49 @@
+﻿Type,Scenario,Carrier,Value
+Carrier,REF 2022,Electricity,73.41277778
+Carrier,REF 2022,District heating,23.91833333
+Carrier,REF 2022,Ambient energy,0
+Carrier,REF 2022,Solar thermal,0
+Carrier,REF 2022,Biomass,35.36805556
+Carrier,REF 2022,Bio-CH4,0.485833333
+Carrier,REF 2022,Gas,66.41166667
+Carrier,REF 2022,Waste,5.498333333
+Carrier,REF 2022,Bio-diesel,2.729166667
+Carrier,REF 2022,Fossil fuels,112.9441667
+Carrier,REF 2022,Syn-kerosene,0
+Carrier,REF 2022,Kerosene,16.29722222
+Carrier,REF 2022,Hydrogen,0
+Carrier,TECH 2050,Electricity,135
+Carrier,TECH 2050,District heating,17
+Carrier,TECH 2050,Ambient energy,17
+Carrier,TECH 2050,Solar thermal,4
+Carrier,TECH 2050,Biomass,54
+Carrier,TECH 2050,Bio-CH4,10
+Carrier,TECH 2050,Gas,0
+Carrier,TECH 2050,Waste,5
+Carrier,TECH 2050,Bio-diesel,11
+Carrier,TECH 2050,Fossil fuels,0
+Carrier,TECH 2050,Syn-kerosene,10
+Carrier,TECH 2050,Kerosene,0
+Carrier,TECH 2050,Hydrogen,54
+Carrier,LED 2050,Electricity,106
+Carrier,LED 2050,District heating,13
+Carrier,LED 2050,Ambient energy,16
+Carrier,LED 2050,Solar thermal,4
+Carrier,LED 2050,Biomass,47
+Carrier,LED 2050,Bio-CH4,7
+Carrier,LED 2050,Gas,0
+Carrier,LED 2050,Waste,4
+Carrier,LED 2050,Bio-diesel,7
+Carrier,LED 2050,Fossil fuels,0
+Carrier,LED 2050,Syn-kerosene,8
+Carrier,LED 2050,Kerosene,0
+Carrier,LED 2050,Hydrogen,36
+Sector,REF 2022,Buildings,111
+Sector,REF 2022,Transport,111
+Sector,REF 2022,Industry,115
+Sector,TECH 2050,Buildings,105
+Sector,TECH 2050,Transport,105
+Sector,TECH 2050,Industry,106
+Sector,LED 2050,Buildings,100
+Sector,LED 2050,Transport,80
+Sector,LED 2050,Industry,68
