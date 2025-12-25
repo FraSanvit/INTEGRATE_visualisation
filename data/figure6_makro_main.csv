@@ -1,0 +1,29 @@
+scenario;variable;value
+TECH-unlimited;Gross Domestic Product (real);1.629071765
+TECH-unlimited;Public Consumption (real);1.652188021
+TECH-unlimited;Private Consumption (real);1.622749291
+TECH-unlimited;Wage Rate;0.938419185
+TECH-unlimited;Capital Rent;1.029195524
+TECH-unlimited;CPI Households;1.000841458
+TECH-unlimited;CPI Government;0.953644134
+TECH-limited;Gross Domestic Product (real);1.609334671
+TECH-limited;Public Consumption (real);1.63930586
+TECH-limited;Private Consumption (real);1.600838248
+TECH-limited;Wage Rate;0.87789512
+TECH-limited;Capital Rent;1.046987345
+TECH-limited;CPI Households;0.973567781
+TECH-limited;CPI Government;0.967741508
+LED-unlimited;Gross Domestic Product (real);1.682401732
+LED-unlimited;Public Consumption (real);1.65143055
+LED-unlimited;Private Consumption (real);1.688896405
+LED-unlimited;Wage Rate;0.958791994
+LED-unlimited;Capital Rent;1.059442877
+LED-unlimited;CPI Households;0.992184448
+LED-unlimited;CPI Government;0.922719319
+LED-limited;Gross Domestic Product (real);1.678216518
+LED-limited;Public Consumption (real);1.648350491
+LED-limited;Private Consumption (real);1.684279945
+LED-limited;Wage Rate;0.942040576
+LED-limited;Capital Rent;1.068473015
+LED-limited;CPI Households;0.972513864
+LED-limited;CPI Government;0.960231723

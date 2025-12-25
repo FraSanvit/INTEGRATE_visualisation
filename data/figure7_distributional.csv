@@ -1,0 +1,17 @@
+scenario;household;variable;value
+TECH-unlimited;Q1;Private Real Consumption;1.589014352
+TECH-unlimited;Q2;Private Real Consumption;1.60166855
+TECH-unlimited;Q3;Private Real Consumption;1.599243575
+TECH-unlimited;Q4;Private Real Consumption;1.655751753
+TECH-limited;Q1;Private Real Consumption;1.621777705
+TECH-limited;Q2;Private Real Consumption;1.648700939
+TECH-limited;Q3;Private Real Consumption;1.65982169
+TECH-limited;Q4;Private Real Consumption;1.743165811
+LED-unlimited;Q1;Private Real Consumption;1.540757862
+LED-unlimited;Q2;Private Real Consumption;1.562956583
+LED-unlimited;Q3;Private Real Consumption;1.559375219
+LED-unlimited;Q4;Private Real Consumption;1.65952281
+LED-limited;Q1;Private Real Consumption;1.608533522
+LED-limited;Q2;Private Real Consumption;1.638531893
+LED-limited;Q3;Private Real Consumption;1.649217112
+LED-limited;Q4;Private Real Consumption;1.747046552

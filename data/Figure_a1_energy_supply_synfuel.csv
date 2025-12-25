@@ -1,0 +1,49 @@
+Scenario;Technology;Value
+TECH-unlimited;biofuel-domestic;0
+TECH-unlimited;methanol-domestic;3.349702734
+TECH-unlimited;biomethane-domestic;2.416717905
+TECH-unlimited;hydrogen-domestic;0.001832848
+TECH-unlimited;diesel-domestic;2.549338566
+TECH-unlimited;kerosene-domestic;0
+TECH-unlimited;methane-domestic;0.030573453
+TECH-unlimited;biomethane-net imports;7.090512195
+TECH-unlimited;hydrogen-net imports;54.11766996
+TECH-unlimited;diesel-net imports;7.943090515
+TECH-unlimited;kerosene-net imports;10.26837005
+TECH-unlimited;methane-net imports;0.942137964
+LED-unlimited;biofuel-domestic;0
+LED-unlimited;methanol-domestic;9.044861786
+LED-unlimited;biomethane-domestic;2.417191251
+LED-unlimited;hydrogen-domestic;0.001828253
+LED-unlimited;diesel-domestic;4.90300887
+LED-unlimited;kerosene-domestic;0
+LED-unlimited;methane-domestic;0.035818872
+LED-unlimited;biomethane-net imports;5.029840773
+LED-unlimited;hydrogen-net imports;35.82256377
+LED-unlimited;diesel-net imports;2.1951835
+LED-unlimited;kerosene-net imports;8.212713326
+LED-unlimited;methane-net imports;-0.03482563
+TECH-limited;biofuel-domestic;0
+TECH-limited;methanol-domestic;0.002495471
+TECH-limited;biomethane-domestic;2.417441918
+TECH-limited;hydrogen-domestic;36.3940172
+TECH-limited;diesel-domestic;5.612089895
+TECH-limited;kerosene-domestic;0
+TECH-limited;methane-domestic;0.005024271
+TECH-limited;biomethane-net imports;6.865953655
+TECH-limited;hydrogen-net imports;17.65482063
+TECH-limited;diesel-net imports;4.874709657
+TECH-limited;kerosene-net imports;10.27682816
+TECH-limited;methane-net imports;1.191292631
+LED-limited;biofuel-domestic;0
+LED-limited;methanol-domestic;0.000120583
+LED-limited;biomethane-domestic;2.419953687
+LED-limited;hydrogen-domestic;7.216616981
+LED-limited;diesel-domestic;13.21644422
+LED-limited;kerosene-domestic;0
+LED-limited;methane-domestic;3.76408E-05
+LED-limited;biomethane-net imports;5.026206672
+LED-limited;hydrogen-net imports;28.51517265
+LED-limited;diesel-net imports;-6.124626222
+LED-limited;kerosene-net imports;8.222179352
+LED-limited;methane-net imports;3.80659E-05

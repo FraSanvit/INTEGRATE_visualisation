@@ -1,0 +1,31 @@
+scenario;technolgoy;value
+TECH-unlimited;Hydro;39.454518
+TECH-unlimited;Wind;17.20022253
+TECH-unlimited;Biomass CHP;7.993424908
+TECH-unlimited;PV;14.93309963
+TECH-unlimited;Net imports;59.45104953
+TECH-limited;Hydro;40.16446806
+TECH-limited;Wind;29.50030279
+TECH-limited;Biomass CHP;7.99339605
+TECH-limited;PV;87.43919138
+TECH-limited;Net imports;26.29051421
+LED-unlimited;Hydro;39.56151966
+LED-unlimited;Wind;17.20053868
+LED-unlimited;Biomass CHP;6.155346092
+LED-unlimited;PV;7.21918398
+LED-unlimited;Net imports;45.56112658
+LED-limited;Hydro;39.67116712
+LED-limited;Wind;29.50000477
+LED-limited;Biomass CHP;6.158685976
+LED-limited;PV;34.38993481
+LED-limited;Net imports;16.34198254
+TECH-autarky;Hydro;41.04255252
+TECH-autarky;Wind;29.50000074
+TECH-autarky;Biomass CHP;7.996408593
+TECH-autarky;PV;155.1437525
+TECH-autarky;Net imports;-10.98877334
+LED-autarky;Hydro;40.53462449
+LED-autarky;Wind;29.50008026
+LED-autarky;Biomass CHP;6.154880379
+LED-autarky;PV;86.95208775
+LED-autarky;Net imports;-6.876389917

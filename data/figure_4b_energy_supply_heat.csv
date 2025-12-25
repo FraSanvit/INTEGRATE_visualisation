@@ -1,0 +1,13 @@
+scenario;technolgoy;value
+TECH;Biomass boiler;16.07208505
+TECH;Biomethane boiler;1.988197134
+TECH;District heating biomass;17.37251583
+TECH;District heating geothermal;4.249845136
+TECH;Heat pump;30.13622426
+TECH;Solar thermal;3.903200107
+LED;Biomass boiler;10.99206441
+LED;Biomethane boiler;0.000184445
+LED;District heating biomass;13.37839425
+LED;District heating geothermal;4.639332824
+LED;Heat pump;21.93223986
+LED;Solar thermal;3.94270008
