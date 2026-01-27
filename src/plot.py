@@ -1494,7 +1494,7 @@ def dispatch_check(  # noqa: PLR0912, PLR0913, PLR0915
         )
         for stack, hatch in zip(flow_in_stacks, hatches_flow_in):
             stack.set_hatch(hatch)
-            stack.set_edgecolor("black")
+            stack.set_edgecolor("white")
             stack.set_linewidth(0.5)
 
         supply_sequences.append(list(flow_out_data_.columns))
@@ -1541,7 +1541,7 @@ def dispatch_check(  # noqa: PLR0912, PLR0913, PLR0915
     supply_order = merge_legend_orders(
         supply_sequences, min_occurrences=MIN_OCCURRENCES_FOR_LEGEND
     )
-    demand_order = _merge_legend_orders(
+    demand_order = merge_legend_orders(
         demand_sequences, min_occurrences=MIN_OCCURRENCES_FOR_LEGEND
     )
 
