@@ -491,7 +491,9 @@ GROUPS_TECH_DICT_COMPLETE = {
         "hydrogen_to_methanol",
     ],
     "transmission": ["ac_transmission", "dc_transmission"],
+    "trade":  ["hydrogen_trade", "diesel_trade", "kerosene_trade", "methanol_trade", "methane_trade", "electricity_trade", "co2_trade"]
 }
+
 
 
 GROUPS_TECH_DICT_COST = {
@@ -514,7 +516,9 @@ GROUPS_TECH_DICT_COST = {
         "syn_methanol_distribution_export",
         "hydrogen_distribution_export",
     ],
-    "heat technology": ["biofuel_boiler", "methane_boiler", "electric_heater", "hp"],
+    "biofuel heating": ["biofuel_boiler", "biofuel_thermal"],
+    "fossil heating": ["methane_boiler", "oil_boiler"],
+    "electric heating": [ "electric_heater", "hp"],
     "biofuel and waste supply": ["biofuel_supply", "biogas_supply", "waste_supply"],
     "other EV charging": [
         "bus_charging",
@@ -561,7 +565,13 @@ GROUPS_TECH_DICT_COST = {
         "biogas_upgrading",
         "biogas_upgrading_ccs",
     ],
+    "fossil supply": ["diesel_supply", "kerosene_supply", "methane_supply", "methanol_supply", "coal_supply", "oil_supply"],
+    "coal power plant": ["coal_power_plant", "coal_power_plant_ccs"],
+    "geothermal": ["geothermal_dh"],
+    "solar thermal": ["rooftop_solar_thermal"],
     "transmission": ["ac_transmission", "dc_transmission"],
+    "trade":  ["hydrogen_trade", "diesel_trade", "kerosene_trade", "methanol_trade", "methane_trade", "electricity_trade"],
+    "CO2 compensation": ["co2_trade"],
 }
 
 
@@ -588,6 +598,15 @@ GROUPS_TECH_DICT_COST_COLOUR = {
     "hydrogen stations": "#0fe6b7",
     "fuel production": "#643d75",
     "transmission": "#595959",
+    "trade":  "#ea8252",
+    "biofuel heating": "#57EA5E",
+    "fossil heating": "#8B0400",
+    "electric heating": "#E24040",
+    "fossil supply": "#000000",
+    "coal power plant": "#3C3C3C",
+    "geothermal": "#855900F0",
+    "solar thermal": "#FFB300",
+    "CO2 compensation": "#f567ff",
 }
 
 GROUPS_TECH_DICT_MINIMAL = {
@@ -764,4 +783,15 @@ SCENARIO_LABEL_MAPPING = {
     "island": "Limited",
     "noisland": "Unlimited",
     "superisland": "Autarky",
+}
+
+CARRIER_COLOUR = {
+    "hydrogen": "#1f77b4",
+    "diesel": "#792493",
+    "kerosene": "#c243c0",
+    "methanol": "#2b5739",
+    "electricity": "#f2ca29",
+    "methane": "#1fafb4",
+    "oil": "#d62728",
+    "coal": "#7f7f7f",
 }
