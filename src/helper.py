@@ -343,22 +343,6 @@ def df_tech_grouping(df, tech_groups, target_column):
 
     return grouped_df
 
-def dispatch_df_reduction(df_tot, tech_dict, techs_to_drop):
-    """Reduce the size of the dispatch dataframe by aggregating techs."""
-    df_reduced = deepcopy(df_tot)
-    tech_mapping = {item: key for key, values in tech_dict.items() for item in values}
-    df_reduced["techs"] = df_reduced["techs"].replace(tech_mapping)
-
-    # Collapsing all the transmission techs
-    df_reduced["techs"] = df_reduced["techs"].apply(lambda x: "transmission" if x.isupper() else x)
-    df_reduced = df_reduced[~df_reduced["techs"].isin(techs_to_drop)]
-
-    df_agg = df_reduced.groupby(
-        ['scenario', 'techs', 'locs', 'carriers', 'unit', 'timesteps', 'flow_in']
-    )['flow_out'].sum().reset_index()
-
-    return df_agg
-
 def flow_in_out_sum_1M(scenario_list, carrier, loc, tech_dict=None, force_rerun=True):
     """Calculate the monthly sum of flow_in and flow_out for given scenarios."""
     file_path = os.path.join(cnf.RESULTS_PATH, "flow_in_out", "flow_in_out_1M.csv")
@@ -394,30 +378,63 @@ def flow_in_out_sum_1M(scenario_list, carrier, loc, tech_dict=None, force_rerun=
         in_out_month.to_csv(file_path, index=False)
     return in_out_month
 
+def merge_scenario_duals_carrier_loc(carrier, scenario_list, loc):
+    """Merge results from different scenarios."""
+    duals_dict = {}
 
+    for scen in scenario_list:
+        if scen in cnf.SCENARIO_NAMES.keys():
+            if carrier != "co2":
+                duals_ = get_results_df(scen, "duals.csv")
+            else:
+                duals_ = get_results_df(scen, "duals.csv")
+            duals_dict[scen] = duals_[(duals_["carriers"] == carrier) & (duals_["locs"] == loc)]
 
+    if duals_dict:  # Check if duals_dict is not empty
+        data = pd.concat(duals_dict.values(), ignore_index=True)
+    else:
+        data = pd.DataFrame()  # Return an empty DataFrame if no valid scenarios are found
 
+    return data
 
+def merge_scenario_duals_carrier(carrier, scenario_list):
+    """Merge results from different scenarios."""
+    duals_dict = {}
 
+    for scen in scenario_list:
+        if scen in cnf.SCENARIO_NAMES.keys():
+            if carrier != "co2":
+                duals_ = get_results_df(scen, "duals.csv")
+            else:
+                duals_ = get_results_df(scen, "duals.csv")
+            duals_dict[scen] = duals_[(duals_["carriers"] == carrier)]
 
+    if duals_dict:  # Check if duals_dict is not empty
+        data = pd.concat(duals_dict.values(), ignore_index=True)
+    else:
+        data = pd.DataFrame()  # Return an empty DataFrame if no valid scenarios are found
 
+    return data
 
+def cost_per_loctech(scenario_list):
+    cost_dict = {}
+    scenario_names = [f for f in scenario_list if os.path.isdir(os.path.join(cnf.DATA_PATH, f))]
 
+    for scen in scenario_names:
+        transmission_cost = get_results_df(scen, "total_transmission_costs.csv")
+        transmission_cost = transmission_cost.rename(
+            columns={"0": "total_system_cost", "exporting_region": "locs"}
+        ).drop("importing_region", axis=1)
+        transmission_cost["total_system_cost"] = transmission_cost["total_system_cost"].div(1)
 
+        system_cost = get_results_df(scen, "total_system_cost.csv")
 
-    _out = merge_scenario_output(scenario_list, "flow_out_sum_1M")
-    _in = merge_scenario_output(scenario_list, "flow_in_sum_1M")
-    net_import = merge_scenario_output(scenario_list, "net_import_sum_1M")
+        scen_cost = pd.concat([system_cost, transmission_cost], ignore_index=True)
+        cost_dict[scen] = scen_cost
 
-    df_transmission = net_import.rename(columns={"importing_region": "locs"}).drop(
-        "exporting_region", axis=1
-    )
-    df_transmission["flow_in"] = df_transmission["net_import_sum_1M"].apply(lambda x: x if x < 0 else 0)
-    df_transmission["flow_out"] = df_transmission["net_import_sum_1M"].apply(lambda x: x if x > 0 else 0)
-    df_transmission = df_transmission.drop(columns=["net_import_sum_1M"])
-    df_transmission["techs"] = "transmission"
+    data = pd.concat(cost_dict.values(), ignore_index=True)
 
-    flow_1M = pd.concat([_out, _in, df_transmission], ignore_index=True).fillna(0)
+    return data
 
 
 
