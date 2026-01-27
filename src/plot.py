@@ -1789,4 +1789,502 @@ def monthly_dispatch(scenario_list, carrier, loc):
         ax.add_artist(legend_demand)
 
         plt.tight_layout()
+        fig.savefig(
+            f"{cnf.FIGURE_FILE_PATH}/dispatch/monthly_dispatch_{scen}.png",
+            bbox_inches="tight",
+            dpi=300,
+        )
         plt.show()
+
+
+def dual_values_by_scenario(df):
+    """
+    Plot dual_value in subplots grouped by scenario prefix (before '-').
+    Each full scenario is a different color.
+    dual_value is sorted from highest to lowest within each scenario.
+    """
+
+    df = df.copy()
+
+    # Extract scenario prefix (e.g. '2030')
+    df["scenario_prefix"] = df["scenario"].str.split("-").str[0]
+
+    prefixes = df["scenario_prefix"].unique()
+    n = len(prefixes)
+
+    fig, axes = plt.subplots(n, 1, figsize=(9, 3.5 * n), sharex=False)
+
+    if n == 1:
+        axes = [axes]
+
+    for ax, prefix in zip(axes, prefixes):
+        df_prefix = df[df["scenario_prefix"] == prefix]
+
+        scenarios = df_prefix["scenario"].unique()
+
+        for scenario in scenarios:
+            subset = df_prefix[df_prefix["scenario"] == scenario]
+
+            # Sort dual_value from high to low
+            subset_sorted = subset.sort_values("dual_value", ascending=False)
+
+            ax.plot(
+                subset_sorted["dual_value"].values,
+                label=scenario,
+                linewidth=1.5
+            )
+
+        ax.set_title(f"Scenario prefix: {prefix}")
+        ax.set_ylabel("dual_value")
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=8)
+        ax.set_ylim(0, 250)
+
+    axes[-1].set_xlabel("Sorted index (high → low)")
+    plt.tight_layout()
+
+    fig.savefig(
+        f"{cnf.FIGURE_FILE_PATH}/dual_value.png",
+        bbox_inches="tight",
+        dpi=300,
+    )
+
+    plt.show()
+
+
+def stacked_system_cost_by_group(
+    df,
+    groups_tech_dict,
+    groups_colour_dict,
+    value_col="total_system_cost",
+    scenario_col="scenario",
+    tech_col="techs",
+    xlabel="Total system cost (billion € year$^{-1}$)",
+    figsize=(9, 6),
+):
+    # Reverse mapping: tech -> group
+    tech_to_group = {
+        tech: group
+        for group, techs in groups_tech_dict.items()
+        for tech in techs
+    }
+
+    df_plot = df.copy()
+    df_plot["tech_group"] = (
+        df_plot[tech_col]
+        .map(tech_to_group)
+        .fillna(df_plot[tech_col])
+    )
+
+    df_grouped = (
+        df_plot
+        .groupby([scenario_col, "tech_group"], as_index=False)
+        .agg({value_col: "sum"})
+    )
+
+    pivot = df_grouped.pivot(
+        index=scenario_col,
+        columns="tech_group",
+        values=value_col
+    ).fillna(0)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    y = np.arange(len(pivot))
+    pos_left = np.zeros(len(pivot))
+    neg_left = np.zeros(len(pivot))
+
+    for group in pivot.columns:
+        values = pivot[group].values
+        color = groups_colour_dict.get(group, "grey")
+
+        pos_vals = np.where(values > 0, values, 0)
+        neg_vals = np.where(values < 0, values, 0)
+
+        ax.barh(y, pos_vals, left=pos_left, color=color, label=group)
+        ax.barh(y, neg_vals, left=neg_left, color=color)
+
+        pos_left += pos_vals
+        neg_left += neg_vals
+
+    # --- NEW: total system cost markers ---
+    total_cost = pivot.sum(axis=1).values
+
+    ax.scatter(
+        total_cost,
+        y,
+        marker="D",
+        facecolors="white",
+        edgecolors="black",
+        linewidths=1.0,
+        zorder=5,
+        label="Total system cost",
+    )
+
+    # Formatting
+    formatted_labels = [
+        format_scenario_label(s)
+        for s in pivot.index
+    ]
+
+    ax.set_yticks(y)
+    ax.set_yticklabels(formatted_labels)
+    ax.set_xlabel(xlabel)
+    ax.axvline(0, color="black", linewidth=0.8)
+    min_x, max_x = ax.get_xlim()
+    ax.set_xlim(min(min_x,-2), max_x)
+
+    handles, labels = ax.get_legend_handles_labels()
+
+    # Move "Total system cost" to the end
+    total_label = "Total system cost"
+    if total_label in labels:
+        idx = labels.index(total_label)
+        handles.append(handles.pop(idx))
+        labels.append(labels.pop(idx))
+
+    legend = ax.legend(
+        handles,
+        labels,
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1),
+        ncol=1,
+        frameon=False,
+        title="Cost group:",
+    )
+
+    legend._legend_box.align = "left"
+    legend.get_title().set_ha("left")
+
+    plt.tight_layout()
+    plt.savefig(
+        f"{cnf.FIGURE_FILE_PATH}/stacked_system_cost_by_group.png",
+        bbox_inches="tight",
+        dpi=300,
+    )
+    plt.show()
+
+def format_scenario_label(
+    scenario,
+    scenario_label_mapping=cnf.SCENARIO_LABEL_MAPPING,
+    sep_in="-",
+    sep_out=" | ",
+):
+    """Format a scenario string into a more readable label."""
+    parts = scenario.split(sep_in)
+
+    # Always keep the first part (year)
+    labels = [parts[0]]
+
+    # Map remaining parts if possible
+    labels += [
+        scenario_label_mapping[p]
+        for p in parts[1:]
+        if p in scenario_label_mapping
+    ]
+
+    return sep_out.join(labels)
+
+
+def stacked_net_import_two_panels(
+    df_fuels,
+    df_electricity,
+    fuel_carriers,
+    carrier_base_colour,
+    scenario_col="scenario",
+    carrier_col="carriers",
+    value_col="net_import",
+    flow_col="flow",
+    elec_value_col="value",
+    xlabel="Import (+) / Export (-) (TWh)",
+    figsize=(14, 5),
+):
+    """Plot the fuel and electrcity import/export."""
+    fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)
+
+    # ==========================================================
+    # Left panel: fuels
+    # ==========================================================
+    df_f = df_fuels[df_fuels[carrier_col].isin(fuel_carriers)]
+
+    pivot_f = df_f.pivot_table(
+        index=scenario_col,
+        columns=carrier_col,
+        values=value_col,
+        aggfunc="sum",
+        fill_value=0,
+    )
+
+    y = np.arange(len(pivot_f))
+    pos_left = np.zeros(len(pivot_f))
+    neg_left = np.zeros(len(pivot_f))
+
+    fuel_handles = []
+
+    for carrier in pivot_f.columns:
+        values = pivot_f[carrier].values
+
+        base = carrier.split("_")[0]
+        color = carrier_base_colour.get(base, "grey")
+        hatch = "//" if "_fossil" in carrier else None
+
+        pos_vals = np.where(values > 0, values, 0)
+        neg_vals = np.where(values < 0, values, 0)
+
+        axes[0].barh(
+            y, pos_vals, left=pos_left,
+            color=color, hatch=hatch, edgecolor="white",
+            label=carrier
+        )
+        axes[0].barh(
+            y, neg_vals, left=neg_left,
+            color=color, hatch=hatch, edgecolor="white"
+        )
+
+        pos_left += pos_vals
+        neg_left += neg_vals
+
+        fuel_handles.append(
+            plt.Rectangle((0, 0), 1, 1, facecolor=color, hatch=hatch, edgecolor="white", label = format_carrier_label(carrier)
+)
+        )
+
+    axes[0].axvline(0, color="black", linewidth=0.8)
+    axes[0].set_xlabel(xlabel)
+    axes[0].set_title("Fuels")
+    min_x, max_x = axes[0].get_xlim()
+    axes[0].set_xlim(min_x*1.15, max_x*1.15)
+
+    # Formatting
+    formatted_labels = [
+        format_scenario_label(s)
+        for s in pivot_f.index
+    ]
+
+    axes[0].set_yticks(y)
+    axes[0].set_yticklabels(formatted_labels)
+
+    leg_0 = axes[0].legend(
+        handles=fuel_handles,
+        title="Fuel carrier:",
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=False,
+    )
+    leg_0._legend_box.align = "left"
+    leg_0.get_title().set_ha("left")
+
+    # ==========================================================
+    # Right panel: electricity
+    # ==========================================================
+    pivot_e = df_electricity.pivot_table(
+        index=scenario_col,
+        columns=flow_col,
+        values=elec_value_col,
+        aggfunc="sum",
+        fill_value=0,
+    )
+
+    pos_left = np.zeros(len(pivot_e))
+    neg_left = np.zeros(len(pivot_e))
+
+    elec_handles = []
+
+    for flow, color in zip(["import", "export"], ["#ffea08", "#ab9d00"]):
+        if flow not in pivot_e:
+            continue
+
+        values = pivot_e[flow].values
+
+        pos_vals = values if flow == "import" else np.zeros_like(values)
+        neg_vals = values if flow == "export" else np.zeros_like(values)
+
+        axes[1].barh(y, pos_vals, left=pos_left, color=color, edgecolor="white", label=flow)
+        axes[1].barh(y, neg_vals, left=neg_left, color=color, edgecolor="white")
+
+        pos_left += pos_vals
+        neg_left += neg_vals
+
+        elec_handles.append(
+            plt.Rectangle((0, 0), 1, 1, facecolor=color, edgecolor="white", label=flow.capitalize())
+        )
+
+    # --- Net electricity import (diamond) ---
+    net_elec = pivot_e.sum(axis=1).values
+
+    axes[1].scatter(
+        net_elec,
+        y,
+        marker="D",
+        facecolors="white",
+        edgecolors="black",
+        linewidths=1.0,
+        zorder=5,
+    )
+
+    elec_handles.append(
+        Line2D([0], [0], marker="D", color="black",
+               markerfacecolor="white", linestyle="None",
+               label="Net electricity import")
+    )
+
+    axes[1].axvline(0, color="black", linewidth=0.8)
+    axes[1].set_xlabel(xlabel)
+    axes[1].set_title("Electricity")
+    min_x, max_x = axes[1].get_xlim()
+    axes[1].set_xlim(min_x*1.15, max_x*1.15)
+
+    leg_1 = axes[1].legend(
+        handles=elec_handles,
+        title="Electricity:",
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=False,
+    )
+
+    leg_1._legend_box.align = "left"
+    leg_1.get_title().set_ha("left")
+
+    plt.tight_layout()
+    plt.savefig(
+        f"{cnf.FIGURE_FILE_PATH}/net_import_fuel_elec.png",
+        bbox_inches="tight",
+        dpi=300,
+    )
+    plt.show()
+
+
+def format_carrier_label(carrier):
+    parts = carrier.split("_")
+
+    first = "CO₂" if parts[0] == "co2" else parts[0].capitalize()
+
+    if len(parts) > 1:
+        rest = f"({' '.join(parts[1:])})"
+        return f"{first} {rest}"
+    else:
+        return first
+
+
+def stacked_net_import_by_year(
+    df_fuels,
+    df_electricity,
+    fuel_carriers,
+    carrier_base_colour,
+    scenario_col="scenario",
+    carrier_col="carriers",
+    value_col="net_import",
+    flow_col="flow",
+    elec_value_col="value",
+    xlabel="Import (+) / Export (-) (TWh)",
+    figsize_per_row=(14, 3.5),
+):
+    """Plot fuel and electricity imports/exports, split by scenario prefix (e.g., 2030, 2050)."""
+
+    # Extract scenario prefix (first part before '-')
+    df_fuels["scenario_prefix"] = df_fuels[scenario_col].str.split("-").str[0]
+    df_electricity["scenario_prefix"] = df_electricity[scenario_col].str.split("-").str[0]
+
+    unique_prefixes = sorted(pd.concat([df_fuels["scenario_prefix"], df_electricity["scenario_prefix"]]).unique())
+    nrows = len(unique_prefixes)
+
+    fig, axes = plt.subplots(nrows, 2, figsize=(figsize_per_row[0], figsize_per_row[1] * nrows), sharey=False, sharex=True)
+    if nrows == 1:
+        axes = np.array([axes])  # Ensure axes is 2D array even if 1 row
+
+    for i, prefix in enumerate(unique_prefixes):
+        # Filter scenarios for this prefix
+        df_f_group = df_fuels[df_fuels["scenario_prefix"] == prefix]
+        df_e_group = df_electricity[df_electricity["scenario_prefix"] == prefix]
+
+        # -------------------- Fuels panel --------------------
+        pivot_f = df_f_group[df_f_group[carrier_col].isin(fuel_carriers)].pivot_table(
+            index=scenario_col, columns=carrier_col, values=value_col, aggfunc="sum", fill_value=0
+        )
+
+        y = np.arange(len(pivot_f))
+        pos_left = np.zeros(len(pivot_f))
+        neg_left = np.zeros(len(pivot_f))
+        fuel_handles = []
+
+        for carrier in pivot_f.columns:
+            values = pivot_f[carrier].values
+            base = carrier.split("_")[0]
+            color = carrier_base_colour.get(base, "grey")
+            hatch = "//" if "_fossil" in carrier else None
+
+            pos_vals = np.where(values > 0, values, 0)
+            neg_vals = np.where(values < 0, values, 0)
+
+            axes[i, 0].barh(y, pos_vals, left=pos_left, color=color, hatch=hatch, edgecolor="white")
+            axes[i, 0].barh(y, neg_vals, left=neg_left, color=color, hatch=hatch, edgecolor="white")
+
+            pos_left += pos_vals
+            neg_left += neg_vals
+
+            fuel_handles.append(
+                plt.Rectangle((0, 0), 1, 1, facecolor=color, hatch=hatch, edgecolor="white",
+                              label=format_carrier_label(carrier))
+            )
+
+        axes[i, 0].axvline(0, color="black", linewidth=0.8)
+        axes[i, 0].set_xlabel(xlabel)
+        axes[i, 0].set_title(f"Fuels ({prefix})")
+        axes[i, 0].set_yticks(y)
+        axes[i, 0].set_yticklabels([format_scenario_label(s) for s in pivot_f.index])
+
+        leg_0 = axes[i, 0].legend(handles=fuel_handles, title="Fuel carrier:", loc="center left",
+                                   bbox_to_anchor=(1.02, 0.5), frameon=False)
+        leg_0._legend_box.align = "left"
+        leg_0.get_title().set_ha("left")
+
+        # -------------------- Electricity panel --------------------
+        pivot_e = df_e_group.pivot_table(
+            index=scenario_col, columns=flow_col, values=elec_value_col, aggfunc="sum", fill_value=0
+        )
+
+        pos_left = np.zeros(len(pivot_e))
+        neg_left = np.zeros(len(pivot_e))
+        elec_handles = []
+
+        for flow, color in zip(["import", "export"], ["#ffea08", "#ab9d00"]):
+            if flow not in pivot_e:
+                continue
+            values = pivot_e[flow].values
+            pos_vals = values if flow == "import" else np.zeros_like(values)
+            neg_vals = values if flow == "export" else np.zeros_like(values)
+
+            axes[i, 1].barh(y, pos_vals, left=pos_left, color=color, edgecolor="white")
+            axes[i, 1].barh(y, neg_vals, left=neg_left, color=color, edgecolor="white")
+
+            pos_left += pos_vals
+            neg_left += neg_vals
+
+            elec_handles.append(
+                plt.Rectangle((0, 0), 1, 1, facecolor=color, edgecolor="white", label=flow.capitalize())
+            )
+
+        # Net electricity import
+        net_elec = pivot_e.sum(axis=1).values
+        axes[i, 1].scatter(net_elec, y, marker="D", facecolors="white", edgecolors="black", linewidths=1.0, zorder=5)
+        elec_handles.append(Line2D([0], [0], marker="D", color="black", markerfacecolor="white",
+                                   linestyle="None", label="Net electricity import"))
+
+        axes[i, 1].axvline(0, color="black", linewidth=0.8)
+        axes[i, 1].set_xlabel(xlabel)
+        axes[i, 1].set_title(f"Electricity ({prefix})")
+        axes[i, 1].set_yticks(y)
+        axes[i, 1].set_yticklabels([format_scenario_label(s) for s in pivot_e.index])
+
+        leg_1 = axes[i, 1].legend(handles=elec_handles, title="Electricity:", loc="center left",
+                                   bbox_to_anchor=(1.02, 0.5), frameon=False)
+        leg_1._legend_box.align = "left"
+        leg_1.get_title().set_ha("left")
+
+    plt.tight_layout()
+    plt.savefig(
+        f"{cnf.FIGURE_FILE_PATH}/net_import_fuel_elec_by_year.png",
+        bbox_inches="tight",
+        dpi=300,
+    )
+    plt.show()
