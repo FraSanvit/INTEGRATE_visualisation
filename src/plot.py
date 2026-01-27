@@ -1278,7 +1278,7 @@ def dispatch_subplots_country(  # noqa: PLR0912, PLR0913, PLR0915
     )
 
 
-def _merge_legend_orders(sequences, min_occurrences=1):
+def merge_legend_orders(sequences, min_occurrences=1):
     """
     Merge multiple ordered sequences into a single global order that
     preserves pairwise ordering seen locally (stable topo-sort).
@@ -1483,7 +1483,7 @@ def dispatch_check(  # noqa: PLR0912, PLR0913, PLR0915
         )
         for stack, hatch in zip(flow_out_stacks, hatches_flow_out):
             stack.set_hatch(hatch)
-            stack.set_edgecolor("black")
+            stack.set_edgecolor("white")
             stack.set_linewidth(0.5)
 
         flow_in_stacks = ax.stackplot(
@@ -1513,7 +1513,7 @@ def dispatch_check(  # noqa: PLR0912, PLR0913, PLR0915
         xy_pos_dict[f"{i}-0"]["x1"] = ax.get_position().x1
 
         if i == 0:
-            scenario = _translate_scenario_key(scenario_df["scenario"].iloc[0]).replace("-"," ")
+            scenario = translate_scenario_key(scenario_df["scenario"].iloc[0]).replace("-"," ")
             ax.set_title(f"{scenario}\n{season.capitalize()}", fontsize=20)
         if i == 1:
             ax.set_title(f"{season.capitalize()}", fontsize=20)
@@ -1538,7 +1538,7 @@ def dispatch_check(  # noqa: PLR0912, PLR0913, PLR0915
 
     # --- rest identical ---
     MIN_OCCURRENCES_FOR_LEGEND = 1
-    supply_order = _merge_legend_orders(
+    supply_order = merge_legend_orders(
         supply_sequences, min_occurrences=MIN_OCCURRENCES_FOR_LEGEND
     )
     demand_order = _merge_legend_orders(
@@ -1551,7 +1551,7 @@ def dispatch_check(  # noqa: PLR0912, PLR0913, PLR0915
             1,
             1,
             boxstyle="square,pad=0.3",
-            edgecolor="black",
+            edgecolor="white",
             facecolor=colors[tech],
             hatch=patterns[tech],
             label=tech,
@@ -1565,7 +1565,7 @@ def dispatch_check(  # noqa: PLR0912, PLR0913, PLR0915
             1,
             1,
             boxstyle="square,pad=0.3",
-            edgecolor="black",
+            edgecolor="white",
             facecolor=colors[tech],
             hatch=patterns[tech],
             label=tech,
@@ -1620,16 +1620,15 @@ def dispatch_check(  # noqa: PLR0912, PLR0913, PLR0915
 
     plt.subplots_adjust(hspace=0.65)
     plt.tight_layout()
-    plt.show()
 
     fig.savefig(
         f"{cnf.FIGURE_FILE_PATH}/dispatch/check_{fix_vars_1}_{fix_vars_2}_{fix_vars_3}_{carrier}_{loc}.png",
         bbox_inches="tight",
         dpi=300,
     )
+    plt.show()
 
-
-def _translate_scenario_key(key: str) -> str:
+def translate_scenario_key(key: str) -> str:
     tokens = key.split("-")
     translated = [
         cnf.SCENARIO_LABEL_MAPPING.get(tok, tok)
@@ -1655,7 +1654,7 @@ def monthly_dispatch(scenario_list, carrier, loc):
         .reset_index()
     )
 
-    threshold = 0.01  # TWh
+    threshold = 0.198  # TWh
     red_month_prod = red_month_prod[
         (red_month_prod['flow_in'].abs() + red_month_prod['flow_out'].abs()) >= threshold
     ].copy()
@@ -1683,12 +1682,25 @@ def monthly_dispatch(scenario_list, carrier, loc):
     for scen in scenarios:
 
         df_s = red_month_prod[red_month_prod["scenario"] == scen]
+        df_s = df_s.copy()
+        df_s["timesteps"] = pd.to_datetime(df_s["timesteps"], errors="coerce")
+        df_s["timesteps"] = df_s["timesteps"].dt.to_period("M").dt.start_time
+        df_s = df_s.sort_values("timesteps")
 
-        plt.figure(figsize=(12, 6))
+        fig = plt.figure(figsize=(8, 4))
 
         # Pivot using the datetime timesteps as index
-        pos = df_s.pivot(index="timesteps", columns="techs", values="flow_out").fillna(0)
-        neg = df_s.pivot(index="timesteps", columns="techs", values="flow_in").fillna(0)
+        pos = (
+            df_s.pivot(index="timesteps", columns="techs", values="flow_out")
+                .fillna(0)
+                .sort_index()
+        )
+
+        neg = (
+            df_s.pivot(index="timesteps", columns="techs", values="flow_in")
+                .fillna(0)
+                .sort_index()
+        )
 
         supply_handles, supply_labels = [], []
         demand_handles, demand_labels = [], []
@@ -1729,38 +1741,52 @@ def monthly_dispatch(scenario_list, carrier, loc):
                 demand_labels.append(tech)
             bottom += values
 
+        ax = plt.gca()
+
+        ax.set_axisbelow(True)     # <-- critical
+        ax.yaxis.grid(True, alpha=0.3, linewidth=0.8)
+
         # Zero line
         plt.axhline(0, color="black", linewidth=1)
 
         # Axis formatting
-        plt.title(f"Monthly production for {scen}")
-        plt.xlabel("Month")
-        plt.ylabel("Flow (TWh)")
+        plt.title(f"{format_scenario_label(scen)}")
+        # plt.xlabel("Month")
+        plt.ylabel("Electricity supply (+) and demand (-)\n[TWh]")
         plt.ylim(-max_y * 1.1, max_y * 1.1)
 
         start, end = df_s['timesteps'].min(), df_s['timesteps'].max()
         delta = pd.Timedelta(days=5)  # shrink 5 days from each end
-        plt.xlim(start + delta, end - delta)
+        # plt.xlim(start + delta, end - delta)
 
         # Format x-axis ticks as month abbreviations
         plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
 
-        # ---- Legends ----
-        supply_legend = plt.legend(
+        legend_supply = fig.legend(
             handles=supply_handles,
             labels=supply_labels,
-            title="Supply",
-            loc="upper left"
+            title="Supply (+):",
+            loc="upper left",
+            bbox_to_anchor=(1.01, 0.94),   # right of axes
+            borderaxespad=0.0,
+            frameon=False,
         )
-        plt.gca().add_artist(supply_legend)
 
-        plt.legend(
+        legend_demand = fig.legend(
             handles=demand_handles,
             labels=demand_labels,
-            title="Demand",
-            loc="upper right"
+            title="Demand (-):",
+            loc="upper left",
+            bbox_to_anchor=(1.01, 0.51),  # slightly below supply
+            borderaxespad=0.0,
+            frameon=False,
         )
+
+        legend_supply._legend_box.align = "left"
+        legend_demand._legend_box.align = "left"
+        ax.add_artist(legend_supply)
+        ax.add_artist(legend_demand)
 
         plt.tight_layout()
         plt.show()
