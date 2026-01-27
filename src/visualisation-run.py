@@ -162,14 +162,6 @@ fuel_carriers = [
 
 electricity_carriers = ["electricity"]                 # replace with your electricity carriers
 
-carrier_colors = {
-    "hydrogen": "#1f77b4",
-    "diesel": "#ff7f0e",
-    "kerosene": "#2ca02c",
-    "methanol": "#d62728",
-    "electricity": "#9467bd",
-    "methane": "#1f68b4",
-}
 
 plot.stacked_net_import_two_panels(
     tot_import,
