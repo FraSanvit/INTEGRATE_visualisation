@@ -1109,7 +1109,7 @@ def dispatch_subplots_country(  # noqa: PLR0912, PLR0913, PLR0915
             )
             for stack, hatch in zip(flow_out_stacks, hatches_flow_out):
                 stack.set_hatch(hatch)
-                stack.set_edgecolor("black")
+                stack.set_edgecolor("white")
                 stack.set_linewidth(0.5)
 
             # Flow in stacked area plot with hatches
@@ -1121,7 +1121,7 @@ def dispatch_subplots_country(  # noqa: PLR0912, PLR0913, PLR0915
             )
             for stack, hatch in zip(flow_in_stacks, hatches_flow_in):
                 stack.set_hatch(hatch)
-                stack.set_edgecolor("black")
+                stack.set_edgecolor("white")
                 stack.set_linewidth(0.5)
 
             # NEW: record the order used in this subplot (for merging later)
@@ -1175,10 +1175,10 @@ def dispatch_subplots_country(  # noqa: PLR0912, PLR0913, PLR0915
 
     # NEW: merge the orders across all subplots
     MIN_OCCURRENCES_FOR_LEGEND = 1  # set to 2 to drop items that appear only once
-    supply_order = _merge_legend_orders(
+    supply_order = merge_legend_orders(
         supply_sequences, min_occurrences=MIN_OCCURRENCES_FOR_LEGEND
     )
-    demand_order = _merge_legend_orders(
+    demand_order = merge_legend_orders(
         demand_sequences, min_occurrences=MIN_OCCURRENCES_FOR_LEGEND
     )
 
@@ -1189,7 +1189,7 @@ def dispatch_subplots_country(  # noqa: PLR0912, PLR0913, PLR0915
             1,
             1,
             boxstyle="square,pad=0.3",
-            edgecolor="black",
+            edgecolor="white",
             facecolor=colors[tech],
             hatch=patterns[tech],
             label=tech,
@@ -1203,7 +1203,7 @@ def dispatch_subplots_country(  # noqa: PLR0912, PLR0913, PLR0915
             1,
             1,
             boxstyle="square,pad=0.3",
-            edgecolor="black",
+            edgecolor="white",
             facecolor=colors[tech],
             hatch=patterns[tech],
             label=tech,
