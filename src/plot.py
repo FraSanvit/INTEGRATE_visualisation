@@ -2463,3 +2463,39 @@ def balance_loc_carrier(flow_tot, loc, carrier ,scenario_list, threshold=0.1):
             dpi=300,
         )
         plt.show()
+
+
+def trade_cost_check(scen_sublist):
+    trade = pd.read_csv(os.path.join(cnf.RESULTS_PATH, "costs", "trade_revenues.csv"))
+    df = trade.copy()
+    df = df[df["scenario"].isin(scen_sublist)]  # Filter for AUT
+
+    # Get unique carriers
+    carriers = df["carriers"].unique()
+    n_carriers = len(carriers)
+
+    # Check trades
+    fig, axes = plt.subplots(n_carriers, 1, figsize=(8, 3 * n_carriers), sharex=True)
+
+    for i, carrier in enumerate(carriers):
+        ax = axes[i]
+        subset = df[df["carriers"] == carrier]
+        bars = ax.barh(subset["scenario"], subset["trade_cost"], color="skyblue")
+
+        # Add labels on bars
+        for bar in bars:
+            width = bar.get_width()
+            ax.text(
+                width + 0.02 * max(subset["trade_cost"].abs()),
+                bar.get_y() + bar.get_height() / 2,
+                f"{width:.2f}",
+                va="center",
+            )
+
+        ax.set_title(f"{carrier.capitalize()} Trade Cost")
+        ax.axvline(0, color="black", linewidth=0.8)
+        ax.set_ylabel("Scenario")
+        ax.set_xlabel("Trade Cost (billion 2015 EUR)")
+
+    plt.tight_layout()
+    plt.show()
