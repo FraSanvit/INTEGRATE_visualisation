@@ -114,7 +114,7 @@ def trade_processing(scenario_list, carriers, country_list):
 
                     # Prepare duals for merging
                     duals_rename = duals_.rename(
-                        columns={"locs": "merge_locs", "dual_value": "dual_value"}
+                        columns={"locs": "export", "dual_value": "dual_value"}
                     )
                     df_trans["merge_locs"] = df_trans.apply(
                         lambda x: x["export"] if x["net_import"] < 0 else x["import"], axis=1
@@ -123,12 +123,12 @@ def trade_processing(scenario_list, carriers, country_list):
                     # Merge on scenario, timestep, and the chosen locs
                     df_merged = df_trans.merge(
                         duals_rename,
-                        left_on=["scenario", "timesteps", "merge_locs"],
-                        right_on=["scenario", "timesteps", "merge_locs"],
+                        left_on=["scenario", "timesteps", "export"],
+                        right_on=["scenario", "timesteps", "export"],
                         how="left",
                     )
                     # Compute trade value
-                    df_merged = df_merged.drop(columns="merge_locs")
+                    df_merged = df_merged.drop(columns="export")
                     df_merged["trade"] = df_merged["dual_value"] * df_merged["net_import"]
                     df_merged["trade"] *= 1 / 1000  # billion EUR
                     trade_carrier_loc_scen = df_merged["trade"].sum()
@@ -238,7 +238,7 @@ def net_import_processing(scenario_list, carriers, country_list):
 
             for loc in country_list:
                 print(f"{carrier} | {scenario} | {loc}")
-                
+
                 # initialise per loc only once
                 if loc not in elec_net_import[scenario]:
                     elec_net_import[scenario][loc] = {}
