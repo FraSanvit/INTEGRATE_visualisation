@@ -2288,3 +2288,178 @@ def stacked_net_import_by_year(
         dpi=300,
     )
     plt.show()
+
+
+def balance_loc_carrier(flow_tot, loc, carrier ,scenario_list, threshold=0.1):
+
+    df = flow_tot[
+        (flow_tot["locs"] == loc) &
+        (flow_tot["scenario"].isin(scenario_list)) &
+        (flow_tot["carriers"] == carrier)
+    ].copy()
+
+    df = df[
+        (df["flow_in"].abs() > threshold) |
+        (df["flow_out"].abs() > threshold)
+    ].copy()
+
+    carriers = df["carriers"].unique()
+
+    for carrier in carriers:
+
+        subset = df[df["carriers"] == carrier].copy()
+
+        tech_mapping = {item: key for key, values in cnf.GROUPS_TECH_DICT_FLOW.items() for item in values}
+        subset["techs"] = subset["techs"].replace(tech_mapping)
+
+        subset = subset.groupby(["scenario", "techs", "locs", "carriers", "unit"], as_index=False)[["flow_in", "flow_out"]].sum().reset_index()
+
+        # ---- Rename technologies ----
+
+        tech_rename = helper.format_tech_names(subset["techs"].unique())
+        colors = {tech_rename[t]: helper.get_tech_color(t) for t in tech_rename.keys()}
+        patterns = {tech_rename[t]: helper.get_tech_pattern(t) for t in tech_rename.keys()}
+
+        subset["techs"] = subset["techs"].replace(tech_rename)
+
+        # ---- Rename scenarios ----
+        scenario_rename = {
+            s: format_scenario_label(s)
+            for s in subset["scenario"].unique()
+        }
+        subset["scenario"] = subset["scenario"].replace(scenario_rename)
+
+        # ---- Pivot ----
+        pivot = subset.pivot_table(
+            index="scenario",
+            columns="techs",
+            values=["flow_in", "flow_out"],
+            aggfunc="sum"
+        ).fillna(0)
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        scenarios_order = pivot.index
+
+        # ---- Define plotting order (transmission last) ----
+        techs = list(pivot.columns.levels[1])
+
+        techs_sorted = sorted(
+            techs,
+            key=lambda x: (x.lower() == "transmission", x)
+        )
+        # everything first, transmission last
+
+        # -------- NEGATIVE (flow_in) --------
+        bottom_neg = np.zeros(len(scenarios_order))
+
+        for tech in techs_sorted:
+            if ("flow_in", tech) in pivot.columns:
+                values = pivot[("flow_in", tech)].values
+                ax.barh(
+                    scenarios_order,
+                    values,
+                    left=bottom_neg,
+                    color=colors.get(tech, "grey"),
+                    hatch=patterns.get(tech, None),
+                    label=tech
+                )
+                bottom_neg += values
+
+
+        # -------- POSITIVE (flow_out) --------
+        bottom_pos = np.zeros(len(scenarios_order))
+
+        for tech in techs_sorted:
+            if ("flow_out", tech) in pivot.columns:
+                values = pivot[("flow_out", tech)].values
+                ax.barh(
+                    scenarios_order,
+                    values,
+                    left=bottom_pos,
+                    color=colors.get(tech, "grey"),
+                    hatch=patterns.get(tech, None)
+                )
+                bottom_pos += values
+
+        # -------- SYMMETRIC LIMITS --------
+        max_pos = np.max(bottom_pos)
+        max_neg = np.min(bottom_neg)
+        limit = max(abs(max_pos), abs(max_neg)) * 1.1
+        ax.set_xlim(-limit, limit)
+
+        # -------- STYLING --------
+        ax.set_title(carrier.capitalize())
+        ax.set_xlabel("Supply (+) / Demand (-) [TWh]")
+        ax.grid(axis="x", linestyle="--", alpha=0.4)
+        ax.axvline(0, color="black", linewidth=0.8)
+
+        # Clean legend
+        techs_demand = []
+        techs_supply = []
+
+        for tech in techs_sorted:
+
+            # Demand side: at least one negative value
+            if ("flow_in", tech) in pivot.columns:
+                values_in = pivot[("flow_in", tech)].values
+                if np.any(values_in < 0):
+                    techs_demand.append(tech)
+
+            # Supply side: at least one positive value
+            if ("flow_out", tech) in pivot.columns:
+                values_out = pivot[("flow_out", tech)].values
+                if np.any(values_out > 0):
+                    techs_supply.append(tech)
+
+        # ---- Create legend handles ----
+        demand_handles = [
+            plt.Rectangle(
+                (0, 0), 1, 1,
+                facecolor=colors.get(t, "grey"),
+                hatch=patterns.get(t, None)
+            )
+            for t in techs_demand
+        ]
+
+        supply_handles = [
+            plt.Rectangle(
+                (0, 0), 1, 1,
+                facecolor=colors.get(t, "grey"),
+                hatch=patterns.get(t, None)
+            )
+            for t in techs_supply
+        ]
+
+        # ---- Add two legends ----
+        legend1 = ax.legend(
+            demand_handles,
+            techs_demand,
+            title="Demand",
+            bbox_to_anchor=(1.02, 0.55),
+            loc="upper left",
+            frameon=False
+        )
+
+        legend2 = ax.legend(
+            supply_handles,
+            techs_supply,
+            title="Supply",
+            bbox_to_anchor=(1.02, 0.98),
+            loc="upper left",
+            frameon=False
+        )
+
+        legend1._legend_box.align = "left"
+        legend2._legend_box.align = "left"
+        legend1.get_title().set_ha("left")
+        legend2.get_title().set_ha("left")
+
+        ax.add_artist(legend1)
+
+        plt.tight_layout()
+        fig.savefig(
+            f"{cnf.FIGURE_FILE_PATH}/balance_{carrier}_{loc}.png",
+            bbox_inches="tight",
+            dpi=300,
+        )
+        plt.show()
