@@ -30,6 +30,7 @@ MONTH_DICT = {
     "Dec": "12",
 }
 
+
 def get_results_df(scenario: str, file_name: str) -> pd.DataFrame:
     """Fetch results for a given scenario."""
     file_path = os.path.join(cnf.DATA_PATH, scenario, file_name)
@@ -41,6 +42,7 @@ def get_results_df(scenario: str, file_name: str) -> pd.DataFrame:
     except FileNotFoundError:
         print(f"{file_name} not found in {file_path}")
         return None
+
 
 def duals_harmonization(df_input, scenario):
     """Old duals have missing columns, so this function aims at harmonising the duals."""
@@ -89,6 +91,7 @@ def parse_location_carrier(df: pd.DataFrame, location, carrier):
     parsed_df = df.loc[(df["locs"] == location) & (df["carriers"] == carrier)]
     return parsed_df.reset_index(drop=True)
 
+
 def parse_transmission_location_carrier(df: pd.DataFrame, location, carrier):
     """Parse data based on location and carrier."""
     parsed_df = df.loc[(df["importing_region"] == location) & (df["carriers"] == carrier)]
@@ -123,6 +126,7 @@ def parsing_dispatch(scenario, loc, carrier):
 
     return df_in_out, df_transmission
 
+
 def merge_scenario_output(scenario_list, file_name):
     """Merge capacity results from different scenarios."""
     cap_dict = {}
@@ -138,6 +142,7 @@ def merge_scenario_output(scenario_list, file_name):
         data = pd.DataFrame()  # Return an empty DataFrame if no valid scenarios are found
 
     return data
+
 
 def merge_dispatch(df_in_out, df_transmission):
     """Merge together the input-output file and transmission data and harmonise them."""
@@ -197,7 +202,8 @@ def merge_dispatch(df_in_out, df_transmission):
 
     return df_tot
 
-def get_country_name(alpha3_code, newline = True):
+
+def get_country_name(alpha3_code, newline=True):
     """Return the full country name from an alpha-3 country code."""
     try:
         if alpha3_code == "MKD":
@@ -219,6 +225,7 @@ def get_country_name(alpha3_code, newline = True):
     except KeyError:
         return alpha3_code  # Return the code if not found
 
+
 def dispatch_df_reduction(df_tot, tech_dict, techs_to_drop):
     """Reduce the size of the dispatch dataframe by aggregating techs."""
     df_reduced = deepcopy(df_tot)
@@ -229,11 +236,16 @@ def dispatch_df_reduction(df_tot, tech_dict, techs_to_drop):
     df_reduced["techs"] = df_reduced["techs"].apply(lambda x: "transmission" if x.isupper() else x)
     df_reduced = df_reduced[~df_reduced["techs"].isin(techs_to_drop)]
 
-    df_agg = df_reduced.groupby(
-        ['scenario', 'techs', 'locs', 'carriers', 'unit', 'timesteps', 'flow_in']
-    )['flow_out'].sum().reset_index()
+    df_agg = (
+        df_reduced.groupby(
+            ["scenario", "techs", "locs", "carriers", "unit", "timesteps", "flow_in"]
+        )["flow_out"]
+        .sum()
+        .reset_index()
+    )
 
     return df_agg
+
 
 def format_tech_names(techs):
     """Format the name of the technologies to show in the plot legend."""
@@ -275,12 +287,13 @@ def format_tech_names(techs):
             elif i == 0:
                 new_words.append(w.capitalize())  # only first word capitalized
             else:
-                new_words.append(w.lower())       # rest stay lowercase
+                new_words.append(w.lower())  # rest stay lowercase
         formatted_tech = " ".join(new_words)
 
         formatted_techs[tech] = formatted_tech
 
     return formatted_techs
+
 
 def get_tech_pattern(tech):
     """Helper for technology markers."""
@@ -290,7 +303,7 @@ def get_tech_pattern(tech):
     return ""
 
 
-def get_tech_color(tech: str):
+def get_tech_color(tech: str, tech_dict=cnf.TECH_COLORS):
     """Helper for technology colors."""
 
     def string_to_number(tech: str):
@@ -312,12 +325,13 @@ def get_tech_color(tech: str):
         return grey_scale[round(string_to_number(tech) / 2.5)]
 
     # Known technology → color from config
-    elif tech in cnf.TECH_COLORS:
-        return cnf.TECH_COLORS[tech]
+    elif tech in tech_dict:
+        return tech_dict[tech]
 
     # Unknown technology → fallback gray
     else:
         return "gray"
+
 
 def df_tech_grouping(df, tech_groups, target_column):
     """The function groups together the df according to the tech_groups."""
@@ -343,6 +357,7 @@ def df_tech_grouping(df, tech_groups, target_column):
 
     return grouped_df
 
+
 def flow_in_out_sum_1M(scenario_list, carrier, loc, tech_dict=None, force_rerun=True):
     """Calculate the monthly sum of flow_in and flow_out for given scenarios."""
     file_path = os.path.join(cnf.RESULTS_PATH, "flow_in_out", "flow_in_out_1M.csv")
@@ -352,7 +367,7 @@ def flow_in_out_sum_1M(scenario_list, carrier, loc, tech_dict=None, force_rerun=
 
     else:
         if tech_dict is None:
-            tech_group = cnf.GROUPS_TECH_DICT_MINIMAL # GROUPS_TECH_DICT_FLOW
+            tech_group = cnf.GROUPS_TECH_DICT_MINIMAL  # GROUPS_TECH_DICT_FLOW
 
         flow_dict = {}
 
@@ -362,12 +377,11 @@ def flow_in_out_sum_1M(scenario_list, carrier, loc, tech_dict=None, force_rerun=
                 f"{cnf.DISPATCH_PATH}/{scenario}/{scenario}-{carrier}-{loc}.h5", key="df"
             )
             df_red = dispatch_df_reduction(df_tot, tech_dict=tech_group, techs_to_drop=[])
-            df_red['timesteps'] = pd.to_datetime(df_red['timesteps'])
+            df_red["timesteps"] = pd.to_datetime(df_red["timesteps"])
 
             df_monthly = (
-                df_red
-                .groupby(['scenario', 'techs', 'locs', 'carriers', 'unit'])
-                .resample('M', on='timesteps')[['flow_in', 'flow_out']]
+                df_red.groupby(["scenario", "techs", "locs", "carriers", "unit"])
+                .resample("M", on="timesteps")[["flow_in", "flow_out"]]
                 .sum()
                 .reset_index()
             )
@@ -377,6 +391,45 @@ def flow_in_out_sum_1M(scenario_list, carrier, loc, tech_dict=None, force_rerun=
         in_out_month = pd.concat(flow_dict.values(), ignore_index=True)
         in_out_month.to_csv(file_path, index=False)
     return in_out_month
+
+
+def flow_in_out_year(scenario_list, loc, tech_dict=None, force_rerun=False):
+    """Calculate the yearly sum of flow_in and flow_out for given scenarios."""
+    file_path = os.path.join(cnf.RESULTS_PATH, "flow_in_out", "flow_in_out_year.csv")
+
+    if os.path.exists(file_path) and not force_rerun:
+        in_out_year = pd.read_csv(file_path)
+    else:
+
+        flow_in_sum = merge_scenario_output(scenario_list, "flow_in_sum")
+        flow_out_sum = merge_scenario_output(scenario_list, "flow_out_sum")
+        flow_tot = pd.concat([flow_in_sum, flow_out_sum], ignore_index=True).fillna(0)
+        flow_tot = flow_tot[
+            flow_tot["carriers"] != "electricity"
+        ]  # to avoid double counting with the transmission
+
+        in_out_month_el = flow_in_out_sum_1M(
+            scenario_list, "electricity", loc, tech_dict, force_rerun
+        )
+
+        in_out_year_el = (
+            in_out_month_el.groupby(["scenario", "techs", "locs", "carriers", "unit"])[
+                ["flow_in", "flow_out"]
+            ]
+            .sum()
+            .reset_index()
+        )
+
+        in_out_year_el = in_out_year_el.rename(
+            columns={"flow_in": "flow_in_sum", "flow_out": "flow_out_sum"}
+        )
+
+        in_out_year = pd.concatenate([flow_tot, in_out_year_el], ignore_index=True)
+
+        in_out_year.to_csv(file_path, index=False)
+
+    return in_out_year
+
 
 def merge_scenario_duals_carrier_loc(carrier, scenario_list, loc):
     """Merge results from different scenarios."""
@@ -397,6 +450,7 @@ def merge_scenario_duals_carrier_loc(carrier, scenario_list, loc):
 
     return data
 
+
 def merge_scenario_duals_carrier(carrier, scenario_list):
     """Merge results from different scenarios."""
     duals_dict = {}
@@ -415,6 +469,7 @@ def merge_scenario_duals_carrier(carrier, scenario_list):
         data = pd.DataFrame()  # Return an empty DataFrame if no valid scenarios are found
 
     return data
+
 
 def cost_per_loctech(scenario_list):
     cost_dict = {}
@@ -437,4 +492,118 @@ def cost_per_loctech(scenario_list):
     return data
 
 
+def yearly_data(loc, carrier, resample, minimum: float = 0.001):
+    """Create the dataframe for the yearly plot."""
+    df_scens = {}
+    for scenario in cnf.SCENARIO_NAMES.keys():
+        df_in_out, df_transmission = parsing_dispatch(scenario, loc, carrier)
+        df_scens[scenario] = merge_dispatch(df_in_out, df_transmission)
 
+    data = pd.concat(df_scens.values(), ignore_index=True)
+
+    # Converting index into datetime and resampling
+    data["timesteps"] = pd.to_datetime(data["timesteps"])
+    data = data.set_index("timesteps")
+    if resample:
+        data = (
+            data.groupby(["scenario", "locs", "techs", "carriers", "unit"])
+            .resample(resample)["flow_in", "flow_out"]
+            .sum()
+        )
+    data = data.reset_index()
+    data = pd.melt(
+        data,
+        id_vars=data.columns.difference(["flow_in", "flow_out"]),
+        value_vars=["flow_in", "flow_out"],
+        var_name="flow",
+        value_name="value",
+    )
+
+    data = data[abs(data["value"]) >= minimum]
+    return data
+
+
+def flow_in_out_sum(scenario_list, force_rerun=False):
+    """Merging together demand and supply."""
+    file_path = os.path.join(cnf.RESULTS_PATH, "flow_in_out", "flow_in_out.csv")
+
+    if os.path.exists(file_path) and not force_rerun:
+        # Load the existing file
+        merged_df = pd.read_csv(file_path)
+        file_scenario_list = merged_df["scenario"].unique()
+
+        # Identify missing scenarios
+        missing_scenarios = set(scenario_list) - set(file_scenario_list)
+
+        if not missing_scenarios:
+            print("✅ All scenarios already exist in file. Returning cached results.")
+            return merged_df
+        else:
+            print(f"⚠️ Missing scenarios detected: {missing_scenarios}. Recomputing only those...")
+    else:
+        # If no file or force_rerun=True → start fresh
+        merged_df = pd.DataFrame()
+        missing_scenarios = scenario_list
+
+    # --- Compute only missing scenarios ---
+    flow_dict = {}
+    scenario_names = [f for f in missing_scenarios if os.path.isdir(os.path.join(cnf.DATA_PATH, f))]
+
+    for scen in scenario_names:
+        print(f"Merging flows of scenario: {scen}")
+        # FLOW in and out
+        df_in = (
+            get_results_df(scen, "flow_in.csv")
+            # .groupby(["scenario", "techs", "locs", "carriers", "unit"])["flow_in"]
+            # .sum()
+            # .reset_index()
+        )
+        df_in["flow_in"] *= -1
+
+        df_out = (
+            get_results_df(scen, "flow_out.csv")
+            # .groupby(["scenario", "techs", "locs", "carriers", "unit"])["flow_out"]
+            # .sum()
+            # .reset_index()
+        )
+
+        df_transmission = get_results_df(scen, "net_import.csv")
+        df_transmission = df_transmission.rename(columns={"importing_region": "locs"}).drop(
+            "exporting_region", axis=1
+        )
+        df_transmission["flow_in"] = df_transmission["0"].apply(lambda x: x if x < 0 else 0)
+        df_transmission["flow_out"] = df_transmission["0"].apply(lambda x: x if x > 0 else 0)
+        df_transmission = df_transmission.drop(columns=["0"])
+        df_transmission["techs"] = "transmission"
+
+        df_in_out = pd.concat([df_in, df_out, df_transmission], ignore_index=True).fillna(0)
+        df_in_out["net"] = df_in_out["flow_in"] + df_in_out["flow_out"]
+        df_in_out["flow_in"] = df_in_out["net"].apply(lambda x: x if x < 0 else 0)
+        df_in_out["flow_out"] = df_in_out["net"].apply(lambda x: x if x > 0 else 0)
+        df_in_out = df_in_out.drop(columns=["net"])
+
+        df_in_out = (
+            df_in_out.groupby(["scenario", "techs", "locs", "carriers", "unit"])[
+                ["flow_in", "flow_out"]
+            ]
+            .sum()
+            .reset_index()
+        )
+
+        flow_dict[scen] = df_in_out
+
+    # Concatenate old + new
+    if not merged_df.empty:
+        merged_df = pd.concat(
+            [merged_df, pd.concat(flow_dict.values(), ignore_index=True)], ignore_index=True
+        )
+    else:
+        merged_df = pd.concat(flow_dict.values(), ignore_index=True)
+
+    # Save updated results
+    merged_df.to_csv(file_path, index=False)
+
+    # Filtering only requested scenarios
+    merged_df_filtered = merged_df[merged_df["scenario"].isin(scenario_list)].copy()
+
+    return merged_df_filtered
