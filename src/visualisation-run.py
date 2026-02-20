@@ -56,11 +56,11 @@ for scen in ["int", "ref"]:
 
 # %% Monthly production from RES
 
-scenario_list = list(cnf.SCENARIO_NAMES.keys())
+scenario_list_monthly = list(cnf.SCENARIO_NAMES.keys())
 carrier = "electricity"
 loc = "AUT"
 
-plot.monthly_dispatch(scenario_list, carrier, loc)
+plot.monthly_dispatch(scenario_list_monthly, carrier, loc)
 
 # %% Load duration curve
 scenario_list = [
@@ -96,12 +96,12 @@ else:
 
 df_cost = helper.cost_per_loctech(scenario_list)
 
-trade = trade.rename(columns={"carriers":"techs","trade_cost": "total_system_cost"})
+trade = trade.rename(columns={"carriers": "techs", "trade_cost": "total_system_cost"})
 trade["techs"] = trade["techs"].astype(str) + "_trade"
 
 # System benefits (keeping 'locs')
 df_cost_aut = (
-    df_cost[df_cost["locs"]==country_list[0]]
+    df_cost[df_cost["locs"] == country_list[0]]
     .groupby(["scenario", "locs", "techs", "unit"])["total_system_cost"]
     .sum()
     .reset_index()
@@ -110,17 +110,14 @@ df_cost_aut = (
 df_cost_aut_tot = pd.concat([df_cost_aut, trade], ignore_index=True)
 
 # Remove the co2 trade from 2030 scenarios (as there is no cost)
-mask = (
-    df_cost_aut_tot["scenario"].str.contains("2030")
-    & (df_cost_aut_tot["techs"] == "co2_trade")
-)
+mask = df_cost_aut_tot["scenario"].str.contains("2030") & (df_cost_aut_tot["techs"] == "co2_trade")
 
 df_cost_aut_tot = df_cost_aut_tot[~mask]
 
 plot.stacked_system_cost_by_group(
     df=df_cost_aut_tot[~df_cost_aut_tot["techs"].str.contains("storage_co2")],
     groups_tech_dict=cnf.GROUPS_TECH_DICT_COST,
-    groups_colour_dict=cnf.GROUPS_TECH_DICT_COST_COLOUR
+    groups_colour_dict=cnf.GROUPS_TECH_DICT_COST_COLOUR,
 )
 
 # Import and export totals
@@ -142,25 +139,25 @@ fossil_import_list = ["oil", "diesel", "kerosene", "methanol", "methane", "coal"
 flow_out_sum = helper.merge_scenario_output(scenario_list, "flow_out_sum")
 flow_fossil_aut = flow_out_sum[
     (flow_out_sum["techs"].str.contains("supply"))
-    & (flow_out_sum["locs"]==country_list[0])
+    & (flow_out_sum["locs"] == country_list[0])
     & (flow_out_sum["carriers"].isin(fossil_import_list))
-].rename(columns={"flow_out_sum":"net_import"})
+].rename(columns={"flow_out_sum": "net_import"})
 
 flow_fossil_aut["carriers"] = flow_fossil_aut["carriers"].astype(str) + "_fossil"
 
-tot_import = pd.concat([
-        net_import_sum,
-        flow_fossil_aut[["scenario", "locs", "carriers", "net_import", "unit"]]], ignore_index=True)
-tot_import["unit"] = tot_import["unit"].replace({"twh":"TWh"})
+tot_import = pd.concat(
+    [net_import_sum, flow_fossil_aut[["scenario", "locs", "carriers", "net_import", "unit"]]],
+    ignore_index=True,
+)
+tot_import["unit"] = tot_import["unit"].replace({"twh": "TWh"})
 
 # Add supply
 
 fuel_carriers = [
-    c for c in tot_import["carriers"].unique()
-    if c not in {"co2", "electricity"}
+    c for c in tot_import["carriers"].unique() if c not in {"co2", "electricity"}
 ]  # replace with your fuel carriers
 
-electricity_carriers = ["electricity"]                 # replace with your electricity carriers
+electricity_carriers = ["electricity"]  # replace with your electricity carriers
 
 
 plot.stacked_net_import_two_panels(
@@ -176,3 +173,39 @@ plot.stacked_net_import_by_year(
     fuel_carriers,
     cnf.CARRIER_COLOUR,
 )
+
+# %%% Supply and Demand
+
+flow_in_sum = helper.merge_scenario_output(scenario_list, "flow_in_sum")
+flow_out_sum = helper.merge_scenario_output(scenario_list, "flow_out_sum")
+flow_tot = pd.concat([flow_out_sum, flow_in_sum], ignore_index=True).fillna(0)
+
+
+scenario_list = cnf.SCENARIO_NAMES.keys()
+
+# file_path = os.path.join(cnf.RESULTS_PATH, "flow_in_out", "flow_in_out.csv")
+flow_tot = helper.flow_in_out_sum(scenario_list)
+plot.balance_loc_carrier(flow_tot, "AUT", "electricity", scenario_list)
+
+
+# Check load factors
+cap = helper.merge_scenario_output(scenario_list, "nameplate_capacity")
+flow_out_sum = helper.merge_scenario_output(scenario_list, "flow_out_sum")
+merged = cap.merge(
+    flow_out_sum[["scenario", "techs", "locs", "carriers", "flow_out_sum"]],
+    on=["scenario", "techs", "locs", "carriers"],
+    how="left",
+)
+merged["load_factor"] = merged["flow_out_sum"] / merged["nameplate_capacity"] / 8760
+
+merged[(merged["techs"].str.contains("wind")) & merged["locs"].str.contains("AUT")]
+
+df_cost_aut_tot[
+    (df_cost_aut_tot["techs"].str.contains("wind")) & df_cost_aut_tot["locs"].str.contains("AUT")
+]
+
+
+flow_in_sum = helper.merge_scenario_output(scenario_list, "flow_in_sum")
+flow_in_sum_AUT = flow_in_sum[
+    (flow_in_sum["locs"].str.contains("AUT")) & (flow_in_sum["scenario"].isin(scenario_list))
+]
