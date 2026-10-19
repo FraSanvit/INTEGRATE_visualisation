@@ -53,53 +53,53 @@ ax_macro = [fig_macro.add_subplot(gs_top[i]) for i in range(3)]
 
 for i, variable in enumerate(variables_macro):
     macro_variable = macro_df[macro_df['variable'] == variable]
-    
+
     # Get the reference value from TECH-unlimited scenario
     reference_data = macro_variable[macro_variable['scenario'] == 'TECH-unlimited']
     reference_value = reference_data['value'].values[0]
-    
+
     # Get the x-axis positions for the scenarios
     scenario_positions = {scenario: idx for idx, scenario in enumerate(scenarios)}
-    
+
     for scenario in scenarios:
         scenario_data = macro_variable[macro_variable['scenario'] == scenario]
         value = scenario_data['value'].values[0]
-        
+
         #get scenario color from scenario_colors dictionary
         color = scenario_colors.get(scenario)
-        
+
         #plot bars
         ax_macro[i].bar(scenario, value, color=color)
-        
+
         # Calculate percentage difference from TECH-unlimited
         pct_diff = ((value - reference_value) / reference_value) * 100
-        
+
         # Only add arrow and text if the value is different from reference
         if value != reference_value:
             # Add double-headed arrow between reference line and bar top
             x_pos = scenario_positions[scenario]
             arrow_offset = 0.1  # horizontal offset for the arrow (increased to avoid overlap)
-            ax_macro[i].annotate('', xy=(x_pos + arrow_offset, value), 
+            ax_macro[i].annotate('', xy=(x_pos + arrow_offset, value),
                           xytext=(x_pos + arrow_offset, reference_value),
                           arrowprops=dict(arrowstyle='<->', color='k', lw=1.5))
-            
+
             # Display percentage next to the arrow
             y_mid = (value + reference_value) / 2
-            ax_macro[i].text(x_pos + arrow_offset + 0.12, y_mid, f'{pct_diff:.1f}%', 
+            ax_macro[i].text(x_pos + arrow_offset + 0.12, y_mid, f'{pct_diff:.1f}%',
                        ha='left', va='center', fontsize=14, color='k')
-        
-    #draw a horizontal line at the reference value (TECH-unlimited)    
+
+    #draw a horizontal line at the reference value (TECH-unlimited)
     ax_macro[i].axhline(y=reference_value, color='k', linestyle='--', linewidth=1.2)
     ax_macro[i].set_title(f'{variable}', fontsize=16, pad=10)
     # Only add y-label to the first (leftmost) subplot
     if i == 0:
         ax_macro[i].set_ylabel('Value relative to benchmark', fontsize=15)
     ax_macro[i].tick_params(axis='both', labelsize=14)
-    
+
     # Add line breaks to scenario labels
     scenario_labels = [s.replace('-', '-\n') for s in scenarios]
     ax_macro[i].set_xticklabels(scenario_labels)
-    
+
     # Set y-limits based on the data range
     max_value = macro_variable['value'].max()
     ax_macro[i].set_ylim(bottom=1.5, top=max_value + max_value * 0.05)
@@ -119,30 +119,30 @@ ax_diff = [fig_macro.add_subplot(gs_bottom[i]) for i in range(4)]
 
 for i, variable in enumerate(variables_diff):
     macro_variable = macro_df[macro_df['variable'] == variable]
-    
+
     for scenario in scenarios:
         scenario_data = macro_variable[macro_variable['scenario'] == scenario]
         value = scenario_data['value'].values[0]
-        
+
         #get scenario color from scenario_colors dictionary
         color = scenario_colors.get(scenario)
-        
+
         #plot bars showing actual values (bars start from 1)
         deviation = value - 1
         ax_diff[i].bar(scenario, deviation, bottom=1, color=color)
-        
+
         # Display the deviation as percentage
         deviation_pct = deviation * 100
         text_offset = 0.0003
-        
+
         # Position text above for positive deviation, below for negative
         if deviation >= 0:
-            ax_diff[i].text(scenario, value + text_offset, f'{deviation_pct:.1f}%', 
+            ax_diff[i].text(scenario, value + text_offset, f'{deviation_pct:.1f}%',
                        ha='center', va='bottom', fontsize=14, color='k')
         else:
-            ax_diff[i].text(scenario, value - text_offset, f'{deviation_pct:.1f}%', 
+            ax_diff[i].text(scenario, value - text_offset, f'{deviation_pct:.1f}%',
                        ha='center', va='top', fontsize=14, color='k')
-        
+
     #draw a horizontal line at 1 (the baseline)
     ax_diff[i].axhline(y=1, color='k', linestyle='--', linewidth=1.2)
     ax_diff[i].set_title(f'{variables_diff_titles[i]}', fontsize=16, pad=10)
@@ -150,11 +150,11 @@ for i, variable in enumerate(variables_diff):
     if i == 0:
         ax_diff[i].set_ylabel('Deviation from benchmark', fontsize=15)
     ax_diff[i].tick_params(axis='both', labelsize=14)
-    
+
     # Add line breaks to scenario labels
     scenario_labels = [s.replace('-', '-\n') for s in scenarios]
     ax_diff[i].set_xticklabels(scenario_labels)
-    
+
     ax_diff[i].set_ylim(bottom=0.8, top=1.12)
 
 # Add b) label to the bottom subplot area (positioned to the left of all subplots)
@@ -183,14 +183,14 @@ fig, ax = plt.subplots(1, len(scenarios_dist), figsize=(16, 8), sharey=True)
 #plot for every scenario
 for i, scenario in enumerate(scenarios_dist):
     scenario_data = distribution_df[distribution_df['scenario'] == scenario]
-    
+
     for quartile in income_quartiles:
         quartile_data = scenario_data[scenario_data['household'] == quartile]
         if len(quartile_data) > 0:
             value = quartile_data['value'].values[0]
-            
+
             #plot bars
-            ax[i].bar(quartile, value, color=scenario_colors.get(scenario))       
+            ax[i].bar(quartile, value, color=scenario_colors.get(scenario))
     ax[i].set_title(f'{scenario}', fontsize=16)
     ax[i].set_ylim(bottom=0.9*distribution_df['value'].min(), top=1.025*distribution_df['value'].max())
     ax[i].tick_params(axis='both', labelsize=14)
@@ -260,45 +260,45 @@ bottom_negative = [0] * len(scenarios_energy)
 for source in energy_sources:
     values = []
     for scenario in scenarios_energy:
-        source_data = energy_supply_df_filtered[(energy_supply_df_filtered['scenario'] == scenario) & 
+        source_data = energy_supply_df_filtered[(energy_supply_df_filtered['scenario'] == scenario) &
                                        (energy_supply_df_filtered['technolgoy'] == source)]
         if len(source_data) > 0:
             values.append(source_data['value'].values[0])
         else:
             values.append(0)
-    
+
     # Get color for this source, default to a pastel gray if not defined
     color = energy_colors.get(source, '#D3D3D3')
-    
+
     # Separate positive and negative values
     positive_values = [max(0, v) for v in values]
     negative_values = [min(0, v) for v in values]
-    
+
     # Plot positive values stacked upwards
     if any(v > 0 for v in values):
         ax1.bar(x_positions, positive_values, width=0.6, bottom=bottom_positive, label=source, color=color)
-        
+
         # Add text labels inside the bars for positive values
         for i, (val, bottom) in enumerate(zip(positive_values, bottom_positive)):
             if val > 0:  # Only show label if there's a value
                 y_pos = bottom + val / 2  # Center of the bar segment
-                ax1.text(i, y_pos, f'{val:.0f}', ha='center', va='center', 
+                ax1.text(i, y_pos, f'{val:.0f}', ha='center', va='center',
                        fontsize=14, color='k')
-        
+
         bottom_positive = [bottom_positive[i] + positive_values[i] for i in range(len(positive_values))]
-    
+
     # Plot negative values stacked downwards
     if any(v < 0 for v in values):
-        ax1.bar(x_positions, negative_values, width=0.6, bottom=bottom_negative, 
+        ax1.bar(x_positions, negative_values, width=0.6, bottom=bottom_negative,
                label=source if not any(v > 0 for v in values) else None, color=color)
-        
+
         # Add text labels inside the bars for negative values
         for i, (val, bottom) in enumerate(zip(negative_values, bottom_negative)):
             if val < 0:  # Only show label if there's a value
                 y_pos = bottom + val / 2  # Center of the bar segment
-                ax1.text(i, y_pos, f'{val:.0f}', ha='center', va='center', 
+                ax1.text(i, y_pos, f'{val:.0f}', ha='center', va='center',
                        fontsize=14, color='k')
-        
+
         bottom_negative = [bottom_negative[i] + negative_values[i] for i in range(len(negative_values))]
 
 # Add a horizontal line at y=0
@@ -331,33 +331,33 @@ if not INCLUDE_AUTARKY:
     for source in heating_sources:
         values_heat = []
         for scenario in scenarios_heating:
-            source_data_heat = heating_supply_df[(heating_supply_df['scenario'] == scenario) & 
+            source_data_heat = heating_supply_df[(heating_supply_df['scenario'] == scenario) &
                                            (heating_supply_df['technolgoy'] == source)]
             if len(source_data_heat) > 0:
                 values_heat.append(source_data_heat['value'].values[0])
             else:
                 values_heat.append(0)
-        
+
         color_heat = heating_colors.get(source, '#95A5A6')
-        positive_values_heat = [max(0, v) for v in values_heat]            
-        negative_values_heat = [min(0, v) for v in values_heat]  
-        
+        positive_values_heat = [max(0, v) for v in values_heat]
+        negative_values_heat = [min(0, v) for v in values_heat]
+
         if any(v > 0 for v in values_heat):
             ax2.bar(x_positions_heat, positive_values_heat, width=0.6, bottom=bottom_positive_heat, label=source, color=color_heat)
             for i, (val, bottom) in enumerate(zip(positive_values_heat, bottom_positive_heat)):
                 if val > 0:
                     y_pos = bottom + val / 2
-                    ax2.text(i, y_pos, f'{val:.0f}', ha='center', va='center', 
+                    ax2.text(i, y_pos, f'{val:.0f}', ha='center', va='center',
                            fontsize=14, color='k')
             bottom_positive_heat = [bottom_positive_heat[i] + positive_values_heat[i] for i in range(len(positive_values_heat))]
-        
+
         if any(v < 0 for v in values_heat):
-            ax2.bar(x_positions_heat, negative_values_heat, width=0.6, bottom=bottom_negative_heat, 
+            ax2.bar(x_positions_heat, negative_values_heat, width=0.6, bottom=bottom_negative_heat,
                    label=source if not any(v > 0 for v in values_heat) else None, color=color_heat)
             for i, (val, bottom) in enumerate(zip(negative_values_heat, bottom_negative_heat)):
                 if val < 0:
                     y_pos = bottom + val / 2
-                    ax2.text(i, y_pos, f'{val:.0f}', ha='center', va='center', 
+                    ax2.text(i, y_pos, f'{val:.0f}', ha='center', va='center',
                            fontsize=14, color='k')
             bottom_negative_heat = [bottom_negative_heat[i] + negative_values_heat[i] for i in range(len(negative_values_heat))]
 
@@ -420,35 +420,35 @@ bottom_negative_synfuel = [0] * len(scenarios_synfuel)
 for source in synfuel_sources:
     values_synfuel = []
     for scenario in scenarios_synfuel:
-        source_data = synfuel_df_filtered[(synfuel_df_filtered['Scenario'] == scenario) & 
+        source_data = synfuel_df_filtered[(synfuel_df_filtered['Scenario'] == scenario) &
                                           (synfuel_df_filtered['Technology'] == source)]
         if len(source_data) > 0:
             values_synfuel.append(source_data['Value'].values[0])
         else:
             values_synfuel.append(0)
-    
+
     # Get color for this source
     color_synfuel = synfuel_colors.get(source, '#95A5A6')
-    
+
     # Separate positive and negative values
     positive_values_synfuel = [max(0, v) for v in values_synfuel]
     negative_values_synfuel = [min(0, v) for v in values_synfuel]
-    
+
     # Plot positive values stacked upwards
     if any(v > 0 for v in values_synfuel):
-        ax_synfuel.bar(x_positions_synfuel, positive_values_synfuel, width=0.5, bottom=bottom_positive_synfuel, 
+        ax_synfuel.bar(x_positions_synfuel, positive_values_synfuel, width=0.5, bottom=bottom_positive_synfuel,
                        label=source, color=color_synfuel)
-        
-        bottom_positive_synfuel = [bottom_positive_synfuel[i] + positive_values_synfuel[i] 
+
+        bottom_positive_synfuel = [bottom_positive_synfuel[i] + positive_values_synfuel[i]
                                    for i in range(len(positive_values_synfuel))]
-    
+
     # Plot negative values stacked downwards
     if any(v < 0 for v in values_synfuel):
-        ax_synfuel.bar(x_positions_synfuel, negative_values_synfuel, width=0.5, bottom=bottom_negative_synfuel, 
-                      label=source if not any(v > 0 for v in values_synfuel) else None, 
+        ax_synfuel.bar(x_positions_synfuel, negative_values_synfuel, width=0.5, bottom=bottom_negative_synfuel,
+                      label=source if not any(v > 0 for v in values_synfuel) else None,
                       color=color_synfuel)
-        
-        bottom_negative_synfuel = [bottom_negative_synfuel[i] + negative_values_synfuel[i] 
+
+        bottom_negative_synfuel = [bottom_negative_synfuel[i] + negative_values_synfuel[i]
                                    for i in range(len(negative_values_synfuel))]
 
 # Add a horizontal line at y=0
@@ -458,7 +458,7 @@ ax_synfuel.set_xticklabels(scenarios_synfuel, fontsize=14)
 ax_synfuel.set_ylabel('Synfuel Supply (TWh/a)', fontsize=16)
 ax_synfuel.set_title('Synfuel Supply Mix', fontsize=18)
 ax_synfuel.legend(loc='upper right', fontsize=8)
-ax_synfuel.set_ylim(bottom=min(bottom_negative_synfuel)*1.5 if min(bottom_negative_synfuel) < 0 else -5, 
+ax_synfuel.set_ylim(bottom=min(bottom_negative_synfuel)*1.5 if min(bottom_negative_synfuel) < 0 else -5,
                     top=max(bottom_positive_synfuel)*1.1)
 ax_synfuel.grid(axis='y', linestyle='--', alpha=0.4)
 ax_synfuel.tick_params(axis='both', labelsize=14)
